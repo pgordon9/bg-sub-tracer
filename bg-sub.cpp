@@ -34,7 +34,7 @@ void help()
                                                                                     << endl
     << "Usage:"                                                                     << endl
     << "./bg_sub {-vid <video filename>|-img <image filename>}"                     << endl
-    << "for example: ./bg_sub -vid video.avi"                                       << endl
+    << "for example: ./bg_sub -vid video.avi 0.05"                                  << endl
     << "or: ./bg_sub -img /data/images/1.png"                                       << endl
     << "--------------------------------------------------------------------------" << endl
     << endl;
