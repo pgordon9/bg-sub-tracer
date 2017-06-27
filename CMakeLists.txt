@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 2.8)
+project( bg-sub )
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+add_executable( bg-sub bg-sub.cpp )
+target_link_libraries( bg-sub ${OpenCV_LIBS} )

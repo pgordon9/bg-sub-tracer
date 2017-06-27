@@ -1,0 +1,3 @@
+/home/pg/Scripts/opencv/CMakeFiles/edit_cache.dir
+/home/pg/Scripts/opencv/CMakeFiles/rebuild_cache.dir
+/home/pg/Scripts/opencv/CMakeFiles/bg-sub.dir
