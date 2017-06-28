@@ -40,6 +40,69 @@ void help()
     << endl;
 }
 
+Mat& ScanImageAndReduceC(Mat& I)
+{
+    // accept only char type matrices
+    CV_Assert(I.depth() == CV_8U);
+
+    int channels = I.channels();
+
+    int nRows = I.rows;
+    int nCols = I.cols * channels;
+
+    if (I.isContinuous())
+    {
+        nCols *= nRows;
+        nRows = 1;
+    }
+
+    int i,j;
+    uchar* p;
+    for( i = 0; i < nRows; ++i)
+    {
+        p = I.ptr<uchar>(i);
+        for ( j = 0; j < nCols; ++j)
+        {
+            cout << p[j] << endl;
+        }
+    }
+    return I;
+}
+
+Mat& markValidPixels(Mat& I, const uchar* const table)
+{
+  // accept only char type matrices
+   CV_Assert(I.depth() == CV_8U);
+
+   const int channels = I.channels();
+   switch(channels)
+   {
+   case 1:
+       {
+           cout << "marking pixels for single channel" << endl;
+
+           MatIterator_<uchar> it, end;
+           for( it = I.begin<uchar>(), end = I.end<uchar>(); it != end; ++it)
+               *it = table[*it];
+           break;
+       }
+   case 3:
+       {
+           cout << "marking pixels for single channel" << endl;
+
+           MatIterator_<Vec3b> it, end;
+           for( it = I.begin<Vec3b>(), end = I.end<Vec3b>(); it != end; ++it)
+           {
+               (*it)[0] = table[(*it)[0]];
+               (*it)[1] = table[(*it)[1]];
+               (*it)[2] = table[(*it)[2]];
+           }
+       }
+   }
+
+   return I;
+}
+
 int main(int argc, char* argv[]) {
     //print help information
     help();
@@ -130,6 +193,9 @@ void processVideo(char* videoFilename) {
         {
            cv::line(ballPathFrame, ballLocations[i], ballLocations[i+1], color);
         }
+
+        Mat frame;
+        frame = ScanImageAndReduceC(fgMaskMOG2);
 
         //show the current frame and the fg masks
         //imshow("Ball path", ballPathFrame);
