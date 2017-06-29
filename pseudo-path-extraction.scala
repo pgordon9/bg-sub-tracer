@@ -13,7 +13,7 @@ for(x <- (i - szW) to 9; y <- (j -szW) to 999) {
   val p = mat(x)(y)
   if (isFG(p)) {
     if(inValidPath(p)) {
-
+      matPath.markAsValid(p)
     }
   }
 }

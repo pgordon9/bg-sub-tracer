@@ -58,12 +58,15 @@ Mat& ScanImageAndReduceC(Mat& I)
 
     int i,j;
     uchar* p;
-    for( i = 0; i < nRows; ++i)
+    for( i = 0; i < 2; ++i)
     {
-        p = I.ptr<uchar>(i);
+    //    p = I.ptr<uchar>(i);
         for ( j = 0; j < nCols; ++j)
         {
-            cout << p[j] << endl;
+          Scalar intensity = I.at<uchar>(i,j);
+          cout << intensity.val[0] << endl;
+
+        //    cout << p[j].val[0] << endl;
         }
     }
     return I;
