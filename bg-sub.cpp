@@ -21,11 +21,17 @@ Ptr<BackgroundSubtractor> pMOG2; //MOG2 Background subtractor
 Ptr<BackgroundSubtractor> secondPMOG2;
 
 // Initial Ball Location
-Int ballX = 960
-Int ballY = 200
+int ballX = 1000;
+int ballY = 770;
+
 // Strike Zone/Path Zone
-Int initSzWidth = 500
-Int initSzHeight = 300
+int initSzWidth = 300;
+int initSzHeight = 400;
+
+int leftBorder = ballX - (initSzWidth / 2);
+int rightBorder = ballX + (initSzWidth / 2);
+int bottomBorder = ballY - (initSzHeight / 4) * 3;
+int topBorder = ballY + (initSzHeight / 4);
 
 double fgThreshold = 0.1;
 double secondFgThreshold = 0.5;
@@ -70,17 +76,17 @@ Mat& ScanImageAndReduceC(Mat& I)
 
     int i,j;
     uchar* p;
-    for( i = 0; i < 2; ++i)
-    {
-    //    p = I.ptr<uchar>(i);
-        for ( j = 0; j < nCols; ++j)
-        {
-          Scalar intensity = I.at<uchar>(i,j);
-          //cout << intensity.val[0] << endl;
 
-        //    cout << p[j].val[0] << endl;
-        }
-    }
+    // for( i = leftBorder; i < rightBorder; ++i)
+    // {
+    // //    p = I.ptr<uchar>(i);
+    //     for ( j = bottomBorder; j < topBorder; ++j)
+    //     {
+    //       Scalar intensity = I.at<uchar>(i,j);
+    //       //cout << intensity.val[0] << endl;
+    //      //    cout << p[j].val[0] << endl;
+    //     }
+    // }
     return I;
 }
 
@@ -160,8 +166,8 @@ void processVideo(char* videoFilename) {
 
         //get the frame number and write it on the current frame
         stringstream ss;
-        rectangle(frame, cv::Point(10, 2), cv::Point(100,20),
-                  cv::Scalar(255,255,255), -1);
+        rectangle(fgMaskMOG2, cv::Point(leftBorder, bottomBorder), cv::Point(rightBorder, topBorder),
+                  cv::Scalar(255,255,255), 1);
         ss << capture.get(CAP_PROP_POS_FRAMES);
         string frameNumberString = ss.str();
         putText(frame, frameNumberString.c_str(), cv::Point(15, 15),
@@ -186,6 +192,10 @@ void processVideo(char* videoFilename) {
 
         //get the input from the keyboard
         keyboard = (char)waitKey( 90 );
+
+        // Iterate the zone..
+        bottomBorder = bottomBorder - 3;
+        topBorder = topBorder - 3;
     }
     //delete capture object
     capture.release();
