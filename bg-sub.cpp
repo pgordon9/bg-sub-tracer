@@ -19,6 +19,14 @@ Mat secondfgMaskMOG2;
 Mat ballPathFrame; //this is your image to draw, don't forget to load it
 Ptr<BackgroundSubtractor> pMOG2; //MOG2 Background subtractor
 Ptr<BackgroundSubtractor> secondPMOG2;
+
+// Initial Ball Location
+Int ballX = 960
+Int ballY = 200
+// Strike Zone/Path Zone
+Int initSzWidth = 500
+Int initSzHeight = 300
+
 double fgThreshold = 0.1;
 double secondFgThreshold = 0.5;
 char keyboard; //input from keyboard
@@ -50,8 +58,12 @@ Mat& ScanImageAndReduceC(Mat& I)
     int nRows = I.rows;
     int nCols = I.cols * channels;
 
+    cout << "Rows: " << nRows << endl;
+    cout << "Cols: " << nCols << endl;
+
     if (I.isContinuous())
     {
+        cout << "Continuous table found" << endl;
         nCols *= nRows;
         nRows = 1;
     }
@@ -64,46 +76,12 @@ Mat& ScanImageAndReduceC(Mat& I)
         for ( j = 0; j < nCols; ++j)
         {
           Scalar intensity = I.at<uchar>(i,j);
-          cout << intensity.val[0] << endl;
+          //cout << intensity.val[0] << endl;
 
         //    cout << p[j].val[0] << endl;
         }
     }
     return I;
-}
-
-Mat& markValidPixels(Mat& I, const uchar* const table)
-{
-  // accept only char type matrices
-   CV_Assert(I.depth() == CV_8U);
-
-   const int channels = I.channels();
-   switch(channels)
-   {
-   case 1:
-       {
-           cout << "marking pixels for single channel" << endl;
-
-           MatIterator_<uchar> it, end;
-           for( it = I.begin<uchar>(), end = I.end<uchar>(); it != end; ++it)
-               *it = table[*it];
-           break;
-       }
-   case 3:
-       {
-           cout << "marking pixels for single channel" << endl;
-
-           MatIterator_<Vec3b> it, end;
-           for( it = I.begin<Vec3b>(), end = I.end<Vec3b>(); it != end; ++it)
-           {
-               (*it)[0] = table[(*it)[0]];
-               (*it)[1] = table[(*it)[1]];
-               (*it)[2] = table[(*it)[2]];
-           }
-       }
-   }
-
-   return I;
 }
 
 int main(int argc, char* argv[]) {
