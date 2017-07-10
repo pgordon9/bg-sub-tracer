@@ -28,12 +28,19 @@ int ballY = 770;
 int initSzWidth = 300;
 int initSzHeight = 400;
 
+// Start zone
 int leftBorder = ballX - (initSzWidth / 2);
 int rightBorder = ballX + (initSzWidth / 2);
 int bottomBorder = ballY - (initSzHeight / 4) * 3;
 int topBorder = ballY + (initSzHeight / 4);
-int FRAME_WINDOW = 4;
-int PER_FRAME_PIXEL_DISTANCE = 20;
+
+// Distance Pixel can be from previous pixel
+const int PER_FRAME_PIXEL_DISTANCE = 20;
+
+// Frame Tracing Buffer
+const int FRAME_WINDOW = 4;
+vector<Mat> prevFrameBuffer[FRAME_WINDOW];
+int prevFrameBufferCircIndex = 0; //Circular buffer index for prevFrames
 
 double fgThreshold = 0.1;
 double secondFgThreshold = 0.5;
@@ -55,7 +62,20 @@ void help()
     << "--------------------------------------------------------------------------" << endl
     << endl;
 }
-//
+
+int previousBufferHeadIndex(){
+  prevFrameBufferCircIndex  = (prevFrameBufferCircIndex <= 0) ? FRAME_WINDOW - 1 : prevFrameBufferCircIndex  - 1;
+}
+
+// what to set the next head to..
+int nextBufferHeadIndex(){
+  (prevFrameBufferCircIndex + 1) % FRAME_WINDOW;
+}
+
+int incBufferHeadIndex(){
+   prevFrameBufferCircIndex = nextBufferHeadIndex();
+}
+
 // Mat& ScanImageAndReduceC(Mat& curr) {
 //     // accept only char type matrices
 //     CV_Assert(curr.depth() == CV_8U);
@@ -109,47 +129,63 @@ void help()
 //     }
 //   }
 // }
-//
-// // Checks if the pixel is a valid pixel by looking at the previous frames
-// // and reaching further out as the frames go.
-// bool ballWasBelow(int x, int y, &Mat[FRAME_WINDOW] prevFrames){
-//   int i;
-//   for(i = 0; i < FRAME_WINDOW - 1; i++){
-//     if(hasPathPixel(x, y + (PER_FRAME_PIXEL_DISTANCE * i), prevFrames[i])){
-//       return true;
-//     }
-//   }
-//   return false;
-// }
+
 
 Scalar intensity;
 // For the frame, check if there exists a pixel within the path
-bool hasPathPixel(int x, int y, Mat& curr){
+// baseFactor: base is (baseFactor * PER_FRAME_PIXEL_DISTANCE)
+//             e.g. for a triangle with base half the height, set to
+bool hasPathPixel(int x, int y, int baseFactor, Mat& curr){
   int i,j;
   int minX, maxX;
   int pixelVal;
   // From top to bottom
   for(j = y + PER_FRAME_PIXEL_DISTANCE; j >= y; --j){
     //Left to right, shrinking as it goes
-    minX = x - (PER_FRAME_PIXEL_DISTANCE * 2) + (j - y);
+    minX = x - (int)(PER_FRAME_PIXEL_DISTANCE * baseFactor) + (j - y);
     //cout << "minX: " << minX << endl;
-    maxX = x + (PER_FRAME_PIXEL_DISTANCE * 2) - (j - y);
+    maxX = x + (int)(PER_FRAME_PIXEL_DISTANCE * baseFactor) - (j - y);
     //cout << "maxX: " << maxX << endl;
     for(i = minX; i < maxX; ++i){
       intensity = curr.at<uchar>(i, j);
       pixelVal = intensity.val[0];
 
       //cout << intensity.val[0];
-      if(pixelVal !=0){
-        cout << pixelVal << endl;
-      }
-      // if(pixelVal == 255 || pixelVal == 127){
-      //   return true;
+      // if(pixelVal !=0){
+      //   cout << pixelVal << endl;
       // }
+      if(pixelVal == 255 || pixelVal == 127){
+         return true;
+      }
     }
   }
   return false;
 }
+
+// Go backward looking for indexes
+int nextPrevBufferIndex(int framesPrior, int currIndex){
+  return (currIndex - framesPrior < 0) ? FRAME_WINDOW - framesPrior : currIndex - framesPrior;
+}
+
+//Checks if the pixel is a valid pixel by looking at the previous frames
+//and reaching further out as the frames go.
+bool atLeastOnFrameSatisfies(int x, int y, Mat& curr){
+  int i;
+  int currBuffIndex = prevFrameBufferCircIndex;
+  Mat iFrame; // TODO should be pointer maybe
+
+  for(i = 0; i < FRAME_WINDOW - 1; i++){
+    currBuffIndex = nextPrevBufferIndex(i, currBuffIndex);
+    iFrame = prevFrameBuffer[currBuffIndex];
+
+    if(hasPathPixel(x, y + (PER_FRAME_PIXEL_DISTANCE * i), 1, iFrame)){
+      return true;
+    }
+    currBuffIndex = previousBufferHeadIndex();
+  }
+  return false;
+}
+
 
 int main(int argc, char* argv[]) {
     //print help information
@@ -247,7 +283,7 @@ void processVideo(char* videoFilename) {
         Mat frame;
         //frame = ScanImageAndReduceC(fgMaskMOG2);
         bool found;
-        found = hasPathPixel(500, 800, fgMaskMOG2);
+        found = hasPathPixel(500, 800, 1, fgMaskMOG2);
         cout << "Found: " << found << endl;
 
         //show the current frame and the fg masks
