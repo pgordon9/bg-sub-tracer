@@ -39,7 +39,7 @@ const int PER_FRAME_PIXEL_DISTANCE = 20;
 
 // Frame Tracing Buffer
 const int FRAME_WINDOW = 4;
-vector<Mat> prevFrameBuffer[FRAME_WINDOW];
+std::vector<Mat> prevFrameBuffer(FRAME_WINDOW);
 int prevFrameBufferCircIndex = 0; //Circular buffer index for prevFrames
 
 double fgThreshold = 0.1;
@@ -169,11 +169,12 @@ int nextPrevBufferIndex(int framesPrior, int currIndex){
 
 //Checks if the pixel is a valid pixel by looking at the previous frames
 //and reaching further out as the frames go.
+//Mat iFrame; // TODO should be pointer maybe
 bool atLeastOnFrameSatisfies(int x, int y, Mat& curr){
   int i;
   int currBuffIndex = prevFrameBufferCircIndex;
-  Mat iFrame; // TODO should be pointer maybe
 
+  Mat iFrame;
   for(i = 0; i < FRAME_WINDOW - 1; i++){
     currBuffIndex = nextPrevBufferIndex(i, currBuffIndex);
     iFrame = prevFrameBuffer[currBuffIndex];
