@@ -13,26 +13,22 @@
 using namespace cv;
 using namespace std;
 
-class BallVector
+class BallLoc
 {
-    float x, y;
+    int _x, _y, _age;
 public:
-    Vector2d() : x(0), y(0) {}
-    Vector2d(float mag, float ang) { setMagAng(mag, ang); }
-
-    void setMagAng(float in_magnitude, float in_angle)
-    {
-        x = in_magnitude * cos(in_angle);
-        y = in_magnitude * sin(in_angle);
+    BallLoc(int x, int y) {
+      _x = x;
+      _y = y;
     }
 
-    float getMag() { return sqrt(x*x + y*y);  }
-    float getAng() { return atan2(y ,x);      }
+    int getX() { return _x; }
+    int getY() { return _y; }
+    int getAge() { return _age; }
 
-    void operator+= (Vector2d& rhs)
+    void incFrameAge()
     {
-        this->x += rhs.x;
-        this->y += rhs.y;
+        _age = _age + 1;
     }
 };
 
@@ -47,6 +43,12 @@ Ptr<BackgroundSubtractor> secondPMOG2;
 // Initial Ball Location
 int ballX = 1000;
 int ballY = 770;
+
+// Total Search Space for ball
+int totalSpaceLB = 30;
+int totalSpaceRB = 1700; // Width - totalSpaceLB
+int totalSpaceTB = 100;
+int totalSpaceBB = 1500; // Height - totalSpaceTB
 
 // Strike Zone/Path Zone
 int initSzWidth = 300;
@@ -66,14 +68,16 @@ const int FRAME_WINDOW = 4;
 std::vector<Mat> prevFrameBuffer(FRAME_WINDOW);
 int prevFrameBufferCircIndex = 0; //Circular buffer index for prevFrames
 
+// List of valid vectors
+std::vector<std::vector<BallLoc> > validPaths;
+
 double fgThreshold = 0.1;
 double secondFgThreshold = 0.5;
 char keyboard; //input from keyboard
 void help();
 void processVideo(char* videoFilename);
 void processImages(char* firstFrameFilename);
-void help()
-{
+void help(){
     cout
     << "--------------------------------------------------------------------------" << endl
     << "This program shows how to use background subtraction methods provided by "  << endl
@@ -99,6 +103,7 @@ int nextBufferHeadIndex(){
 int incBufferHeadIndex(){
    prevFrameBufferCircIndex = nextBufferHeadIndex();
 }
+
 
 
 Scalar intensity;
@@ -158,6 +163,12 @@ bool atLeastOneFrameSatisfies(int x, int y, Mat& curr){
 }
 
 
+void nextFrame(Mat& curr){
+  //Loop through each pixel in the "Valid frame"
+  // Valid Frame upper bound = where vector cannot "begin"
+  // Valid Frame lower bound = user defined ball location + Splash Zone height
+
+}
 
 
 int main(int argc, char* argv[]) {
@@ -186,7 +197,7 @@ int main(int argc, char* argv[]) {
     }
     else if(strcmp(argv[1], "-img") == 0) {
         //input data coming from a sequence of images
-        processImages(argv[2]);
+        //processImages(argv[2]);
     }
     else {
         //error in reading input parameters
@@ -210,8 +221,7 @@ void processVideo(char* videoFilename) {
     //read input data. ESC or 'q' for quitting
     keyboard = 0;
 
-    // path variables
-    // Write the ball path
+    // path variables; Write the ball path
     std::vector<cv::Point> ballLocations; //fill this vector with points, they should be ordered
     int pathX = 200;
     int pathY = 50;
@@ -274,57 +284,4 @@ void processVideo(char* videoFilename) {
     }
     //delete capture object
     capture.release();
-}
-
-void processImages(char* fistFrameFilename) {
-    //read the first file of the sequence
-    frame = imread(fistFrameFilename);
-    if(frame.empty()){
-        //error in opening the first image
-        cerr << "Unable to open first image frame: " << fistFrameFilename << endl;
-        exit(EXIT_FAILURE);
-    }
-    //current image filename
-    string fn(fistFrameFilename);
-    //read input data. ESC or 'q' for quitting
-    keyboard = 0;
-    while( keyboard != 'q' && keyboard != 27 ){
-        //update the background model
-        pMOG2->apply(frame, fgMaskMOG2);
-        //get the frame number and write it on the current frame
-        size_t index = fn.find_last_of("/");
-        if(index == string::npos) {
-            index = fn.find_last_of("\\");
-        }
-        size_t index2 = fn.find_last_of(".");
-        string prefix = fn.substr(0,index+1);
-        string suffix = fn.substr(index2);
-        string frameNumberString = fn.substr(index+1, index2-index-1);
-        istringstream iss(frameNumberString);
-        int frameNumber = 0;
-        iss >> frameNumber;
-        rectangle(frame, cv::Point(10, 2), cv::Point(100,20),
-                  cv::Scalar(255,255,255), -1);
-        putText(frame, frameNumberString.c_str(), cv::Point(15, 15),
-                FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
-        //show the current frame and the fg masks
-        imshow("Frame", frame);
-        imshow("FG Mask MOG 2", fgMaskMOG2);
-        //get the input from the keyboard
-        keyboard = (char)waitKey( 30 );
-        //search for the next image in the sequence
-        ostringstream oss;
-        oss << (frameNumber + 1);
-        string nextFrameNumberString = oss.str();
-        string nextFrameFilename = prefix + nextFrameNumberString + suffix;
-        //read the next frame
-        frame = imread(nextFrameFilename);
-        if(frame.empty()){
-            //error in opening the next image in the sequence
-            cerr << "Unable to open image frame: " << nextFrameFilename << endl;
-            exit(EXIT_FAILURE);
-        }
-        //update the path of the current frame
-        fn.assign(nextFrameFilename);
-    }
 }
