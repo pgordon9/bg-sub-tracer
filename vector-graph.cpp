@@ -24,3 +24,6 @@
 // Vector Formulas/Tricks
 //  - Check if vector direction changes within ~97%, if so don't include
 //
+
+
+// Maybe give each vector an age....
