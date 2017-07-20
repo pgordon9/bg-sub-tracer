@@ -1,0 +1,24 @@
+// From: http://www.cplusplus.com/forum/general/112072/
+
+class Vector2d
+{
+    float x, y;
+public:
+    Vector2d() : x(0), y(0) {}
+    Vector2d(float mag, float ang) { setMagAng(mag, ang); }
+
+    void setMagAng(float in_magnitude, float in_angle)
+    {
+        x = in_magnitude * cos(in_angle);
+        y = in_magnitude * sin(in_angle);
+    }
+
+    float getMag() { return sqrt(x*x + y*y);  }
+    float getAng() { return atan2(y ,x);      }
+
+    void operator+= (Vector2d& rhs)
+    {
+        this->x += rhs.x;
+        this->y += rhs.y;
+    }
+};
